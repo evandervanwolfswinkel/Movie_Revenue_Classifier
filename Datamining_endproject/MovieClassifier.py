@@ -8,7 +8,7 @@ from pandas import options
 from pandas import crosstab
 import numpy as np
 import csv
-
+from sklearn import tree
 
 def RepresentsInt(s):
     try:
@@ -100,12 +100,29 @@ y = label_encoder.fit_transform(np.ravel(profitclass))
 print(y)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = 0.10)
+
 clf = MLPClassifier(hidden_layer_sizes=(5,1000,100,5,),random_state=1, max_iter=3000,learning_rate_init=0.001).fit(X_train, y_train)
 
 pred = clf.score(X_test, y_test)
-print(pred)
+print("Neural Network Score: ", pred, "\n")
 
 y_test_predicted = clf.predict(X_test)
 
 df_confusion = crosstab(y_test, y_test_predicted, rownames=['Actual'], colnames=['Predicted'], margins=True)
+print("Neural Network Confusion Matrix: ")
 print(df_confusion)
+print("\n")
+
+# Decision tree just with scikit learn
+config = {'algorithm': 'C4.5'}
+classifier = tree.DecisionTreeClassifier()
+classifier = classifier.fit(X_train, y_train)
+
+pred_dt = classifier.score(X_test, y_test)
+print("Decision Tree Score: ", pred_dt, "\n")
+
+y_test_predicted_dt = classifier.predict(X_test)
+df_confusion_dt = crosstab(y_test, y_test_predicted_dt, rownames=['Actual'], colnames=['Predicted'], margins=True)
+print("Decision Tree Confusion Matrix: ")
+print(df_confusion_dt)
+
