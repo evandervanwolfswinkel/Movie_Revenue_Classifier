@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
 from pandas import DataFrame
 from pandas import options
 from pandas import crosstab
@@ -92,14 +93,14 @@ with open('./data/movies_metadata.csv', newline='', encoding="utf8") as f:
             runtime = float(row['runtime'])
             language = str(row['original_language'])
             vote_average = float(row['vote_average'])
+            returns = revenue / budget
 
-
-            if revenue > 7017731:
-                revenue = 1
+            if revenue > 7000000 and returns > 1:
+                revenue = "Profitable"
             else:
-                revenue = 0
+                revenue = "Not Profitable"
 
-            moviesdata.append([budget,runtime,language,vote_average,genre,prodcountry,prodcomp])
+            moviesdata.append([budget,returns,runtime,language,vote_average,genre,prodcountry,prodcomp])
             profitclass.append(revenue)
 
 # print(profitclass)
@@ -107,15 +108,14 @@ with open('./data/movies_metadata.csv', newline='', encoding="utf8") as f:
 # print(max(profitclass))
 # print(min(profitclass))
 
+moviesdata = DataFrame(moviesdata,columns=["budget","returns","runtime","language","vote_average","genre","prodcountry","prodcomp"])
+profitclass = DataFrame(profitclass,columns=["revenue"])
 
+print(moviesdata['returns'].describe().apply(lambda x: format(x, 'f')))
+print(moviesdata.boxplot(column=['budget', 'returns']))
+# print(profitclass['revenue'].describe().apply(lambda x: format(x, 'f')))
 
-plt.figure()
-plt.plot(profitclass)
-plt.show()
-
-moviesdata = DataFrame(moviesdata)
-profitclass = DataFrame(profitclass)
-
+print(moviesdata)
 # print(moviesdata)
 # print(profitclass)
 # print(moviesdata.shape)
@@ -131,16 +131,24 @@ print(X)
 
 y = np.ravel(profitclass)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = 0.10)
-clf = MLPClassifier(hidden_layer_sizes=(50,1000,),random_state=1, max_iter=3000,learning_rate_init=0.001).fit(X_train, y_train)
+X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = 0.20)
 
+
+clf = MLPClassifier(hidden_layer_sizes=(5,100,),random_state=1, max_iter=30000,
+                    learning_rate_init=0.001,solver='lbfgs', activation='relu').fit(X_train, y_train)
 pred = clf.score(X_test, y_test)
 print(pred)
 
 y_test_predicted = clf.predict(X_test)
 
-confusion_matrix = confusion_matrix(y_test,y_test_predicted)
-print(confusion_matrix)
 
-df_confusion = crosstab(y_test, y_test_predicted, rownames=['Actual'], colnames=['Predicted'], margins=True)
-print(df_confusion)
+classnames = ['Not Profitable', 'Profitable']
+disp = plot_confusion_matrix(clf, X_test, y_test,
+                                 display_labels=classnames,
+                                 cmap=plt.cm.Blues,
+                                 normalize='true')
+disp.ax_.set_title("Confusion matrix Movie Profitability Classifier")
+
+print("Confusion matrix Movie Profitability Classifier")
+print(disp.confusion_matrix)
+plt.show()
