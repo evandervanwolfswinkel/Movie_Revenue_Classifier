@@ -1,4 +1,4 @@
-from operator import itemgetter
+from sklearn import tree
 
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
@@ -8,7 +8,7 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.preprocessing import scale
 from sklearn.metrics import plot_confusion_matrix
 from pandas import DataFrame
@@ -152,37 +152,67 @@ print(X)
 y = np.ravel(profitclass)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = 0.30)
-# print(X_train)
-# X_train = scale(X_train)
-# print(X_train)
-# X_test = scale(X_test)
 
-# clf = MLPClassifier(hidden_layer_sizes=(100,),random_state=1, max_iter=30000,
-#                         learning_rate_init=0.001, solver='adam', activation='relu').fit(X_train, y_train)
-# pred = clf.score(X_test, y_test)
-# print(pred)
+# classifier = tree.DecisionTreeClassifier(max_depth=5)
+# classifier = classifier.fit(X_train, y_train)
 
 average_score = []
 for i in range(6):
-    clf = MLPClassifier(hidden_layer_sizes=(100,),random_state=i, max_iter=30000,
-                        learning_rate_init=0.001, solver='adam', activation='relu').fit(
-        X_train, y_train)
-
-
-    pred = clf.score(X_test, y_test)
+    classifier = tree.DecisionTreeClassifier(max_depth=5,random_state=i)
+    classifier = classifier.fit(X_train, y_train)
+    pred = classifier.score(X_test, y_test)
     print(pred)
     average_score.append(pred)
 
 print("Average prediction score:")
 print(sum(average_score)/len(average_score))
 
+y_test_predicted_dt = classifier.predict(X_test)
+df_confusion_dt = crosstab(y_test, y_test_predicted_dt, rownames=['Actual'], colnames=['Predicted'], margins=True)
+print("Decision Tree Confusion Matrix  ")
+print(df_confusion_dt)
 
-disp = plot_confusion_matrix(clf, X_test, y_test,
+
+disp = plot_confusion_matrix(classifier, X_test, y_test,
                                  cmap=plt.cm.Blues,
                                  normalize='true')
-
 disp.ax_.set_title("Confusion matrix Movie Profitability Classifier")
 
 print("Confusion matrix Movie Profitability Classifier")
 print(disp.confusion_matrix)
 plt.show()
+
+
+plt.figure(figsize=[70.4, 20.8])
+tree.plot_tree(classifier, filled = True)
+plt.show()
+
+#
+# depth_labels = []
+# class_error_test_list = []
+# class_error_train_list = []
+#
+# for depth in range(2, 21):
+#     clf = tree.DecisionTreeClassifier(criterion="gini", max_depth=depth)
+#     clf = clf.fit(X_train, y_train)
+#
+#     y_pred_test = clf.predict(X_test)
+#     y_pred_train = clf.predict(X_train)
+#
+#     acc_score_test = accuracy_score(y_test, y_pred_test)
+#     acc_score_train = accuracy_score(y_train, y_pred_train)
+#
+#     class_error_test = 1 - acc_score_test
+#     class_error_train = 1 - acc_score_train
+#     class_error_test_list.append(class_error_test)
+#     class_error_train_list.append(class_error_train)
+#     depth_labels.append(depth)
+#
+# plt.title("Classification error of train and test set")
+# plt.plot(depth_labels, class_error_test_list)
+# plt.plot(depth_labels, class_error_train_list)
+# plt.xlabel("Maximum depth")
+# plt.ylabel("Classification error")
+# plt.legend(["Test set", "Train set"])
+# plt.show()
+
