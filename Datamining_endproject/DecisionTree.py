@@ -153,19 +153,21 @@ y = np.ravel(profitclass)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = 0.30)
 
-# classifier = tree.DecisionTreeClassifier(max_depth=5)
-# classifier = classifier.fit(X_train, y_train)
+classifier = tree.DecisionTreeClassifier(max_depth=5)
+classifier = classifier.fit(X_train, y_train)
+pred = classifier.score(X_test, y_test)
+print(pred)
 
-average_score = []
-for i in range(6):
-    classifier = tree.DecisionTreeClassifier(max_depth=5,random_state=i)
-    classifier = classifier.fit(X_train, y_train)
-    pred = classifier.score(X_test, y_test)
-    print(pred)
-    average_score.append(pred)
-
-print("Average prediction score:")
-print(sum(average_score)/len(average_score))
+# average_score = []
+# for i in range(6):
+#     classifier = tree.DecisionTreeClassifier(max_depth=5,random_state=i)
+#     classifier = classifier.fit(X_train, y_train)
+#     pred = classifier.score(X_test, y_test)
+#     print(pred)
+#     average_score.append(pred)
+#
+# print("Average prediction score:")
+# print(sum(average_score)/len(average_score))
 
 y_test_predicted_dt = classifier.predict(X_test)
 df_confusion_dt = crosstab(y_test, y_test_predicted_dt, rownames=['Actual'], colnames=['Predicted'], margins=True)

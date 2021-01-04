@@ -53,6 +53,49 @@ import matplotlib.pyplot as plt
 # elif vote_average <= 4:
 #     vote_average = "Low"
 
+def plot_decision_boundaries(X, y, model_class, **model_params):
+
+    try:
+        X = np.array(X)
+        y = np.array(y).flatten()
+    except:
+        print("Coercing input data to NumPy arrays failed")
+    # Reduces to the first two columns of data
+    reduced_data = X[:, :2]
+    # Instantiate the model object
+    model = model_class(**model_params)
+    # Fits the model with the reduced data
+    model.fit(reduced_data, y)
+
+    # Step size of the mesh. Decrease to increase the quality of the VQ.
+    h = .02  # point in the mesh [x_min, m_max]x[y_min, y_max].
+
+    # Plot the decision boundary. For that, we will assign a color to each
+    x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
+    y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
+    # Meshgrid creation
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+
+    # Obtain labels for each point in mesh using the model.
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1),
+                         np.arange(y_min, y_max, 0.1))
+
+    # Predictions to obtain the classification results
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+
+    # Plotting
+    plt.contourf(xx, yy, Z, alpha=0.4)
+    plt.scatter(X[:, 0], X[:, 1], c=y, alpha=0.8)
+    plt.xlabel("Feature-1", fontsize=15)
+    plt.ylabel("Feature-2", fontsize=15)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    return plt
+
 
 def RepresentsInt(s):
     try:
@@ -108,17 +151,22 @@ with open('./data/movies_metadata.csv', newline='', encoding="utf8") as f:
             returns = revenue / budget
 
 
-            if returns > 4:
-                profit = "High profit"
-            elif returns > 1.2:
-                profit = "Profit"
-            else:
-                profit = "Not Profitable"
+            # if returns > 4:
+            #     profit = "High profit"
+            # elif returns > 1.2:
+            #     profit = "Profit"
+            # else:
+            #     profit = "Not Profitable"
 
             # if returns > 2:
             #     profit = "Profitable"
             # else:
             #     profit = "Not Profitable"
+
+            if returns > 2:
+                profit = 1
+            else:
+                profit = 0
 
             moviesdata.append([budget,runtime,language,vote_average,genre,prodcountry,prodcomp])
             profitclass.append(profit)
@@ -157,24 +205,24 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = 0.30)
 # print(X_train)
 # X_test = scale(X_test)
 
-# clf = MLPClassifier(hidden_layer_sizes=(100,),random_state=1, max_iter=30000,
-#                         learning_rate_init=0.001, solver='adam', activation='relu').fit(X_train, y_train)
-# pred = clf.score(X_test, y_test)
-# print(pred)
+clf = MLPClassifier(hidden_layer_sizes=(100,),random_state=1, max_iter=30000,
+                        learning_rate_init=0.001, solver='adam', activation='relu').fit(X_train, y_train)
+pred = clf.score(X_test, y_test)
+print(pred)
 
-average_score = []
-for i in range(6):
-    clf = MLPClassifier(hidden_layer_sizes=(100,),random_state=i, max_iter=30000,
-                        learning_rate_init=0.001, solver='adam', activation='relu').fit(
-        X_train, y_train)
-
-
-    pred = clf.score(X_test, y_test)
-    print(pred)
-    average_score.append(pred)
-
-print("Average prediction score:")
-print(sum(average_score)/len(average_score))
+# average_score = []
+# for i in range(6):
+#     clf = MLPClassifier(hidden_layer_sizes=(100,),random_state=i, max_iter=30000,
+#                         learning_rate_init=0.001, solver='adam', activation='relu').fit(
+#         X_train, y_train)
+#
+#
+#     pred = clf.score(X_test, y_test)
+#     print(pred)
+#     average_score.append(pred)
+#
+# print("Average prediction score:")
+# print(sum(average_score)/len(average_score))
 
 
 disp = plot_confusion_matrix(clf, X_test, y_test,
@@ -185,4 +233,8 @@ disp.ax_.set_title("Confusion matrix Movie Profitability Classifier")
 
 print("Confusion matrix Movie Profitability Classifier")
 print(disp.confusion_matrix)
+plt.show()
+
+plt.figure()
+plot_decision_boundaries(X_train, y_train, MLPClassifier)
 plt.show()
